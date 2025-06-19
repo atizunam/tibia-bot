@@ -51,7 +51,7 @@ class TibiaDataClient extends JsonSupport with StrictLogging {
 
   def getBoostedBoss(): Future[Either[String, BoostedResponse]] = {
     for {
-      response <- Http().singleRequest(HttpRequest(uri = s"https://api.tibiadata.com/v4/boostablebosses"))
+      response <- Http().singleRequest(HttpRequest(uri = s"${Config.tibiadataApi}/v4/boostablebosses"))
       decoded = decodeResponse(response)
       unmarshalled <- Unmarshal(decoded).to[BoostedResponse].map(Right(_))
         .recover {
@@ -69,7 +69,7 @@ class TibiaDataClient extends JsonSupport with StrictLogging {
 
   def getBoostedCreature(): Future[Either[String, CreatureResponse]] = {
     for {
-      response <- Http().singleRequest(HttpRequest(uri = s"https://api.tibiadata.com/v4/creatures"))
+      response <- Http().singleRequest(HttpRequest(uri = s"${Config.tibiadataApi}/v4/creatures"))
       decoded = decodeResponse(response)
       unmarshalled <- Unmarshal(decoded).to[CreatureResponse].map(Right(_))
         .recover {
@@ -190,20 +190,10 @@ class TibiaDataClient extends JsonSupport with StrictLogging {
     }
   }
 
-  def getCharacterV2(input: (String, Int, String)): Future[Either[String, CharacterResponse]] = {
-    val name = input._1
-    val level = input._2
-    val world = input._3
+
+  def getCharacterLocal(name: String): Future[Either[String, CharacterResponse]] = {
     val encodedName = URLEncoder.encode(name, "UTF-8").replaceAll("\\+", "%20")
-    val bypassName: String = if ((world == "Pulsera" && level >= 400) || (world == "Axera" && level >= 400) || (world == "Victoris" && level >= 80)) {
-      val random = new Random()
-      // Append randomly generated "+" characters to the last word, limited to a maximum length of 20
-      val numPluses = math.min(random.nextInt(7), 20 - encodedName.length) // Randomly generate 0-6 "+" characters, limited to a max length of 20
-      encodedName + ("+" * numPluses)
-    } else {
-      encodedName
-    }
-    val responseFuture = Http().singleRequest(HttpRequest(uri = s"$characterUrl$bypassName"))
+    val responseFuture = Http().singleRequest(HttpRequest(uri = s"${Config.tibiadataApi}/v4/character/$encodedName"))
     responseFuture.flatMap { response =>
       response.header[DateHeader] match {
         case Some(dateHeader) =>
