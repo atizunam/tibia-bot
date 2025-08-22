@@ -210,7 +210,10 @@ object Config {
     "Xybra",
     "Sonira",
     "Kalimera",
-    "Luzibra"
+    "Luzibra",
+    "Escura",
+    "Mystera",
+    "Penumbra"
   )
   val mergedWorlds = List(
     // Pulsera
